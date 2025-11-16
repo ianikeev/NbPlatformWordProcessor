@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="WordProcessor" basedir=".">
+    <description>Builds the module suite WordProcessor.</description>
+
+    <import file="nbproject/build-impl.xml"/>
+</project>

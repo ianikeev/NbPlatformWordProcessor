@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="org.word.editor.core" default="netbeans" basedir=".">
+    <description>Builds, tests, and runs the project org.word.editor.core.</description>
+    <import file="nbproject/build-impl.xml"/>
+
+    <target name="-init-user">
+        <tstamp>
+            <format property="build.tstamp" pattern="yyyy-MM-dd-HH-mm" locale="en,UK"/>
+        </tstamp>
+
+        <property name="app.version" value="DEV-BUILD-${build.tstamp}"/>
+    </target>
+
+    <target name="-pre-compile" depends="-init-user">
+        <echo message="Generating AppVersion.java with version: ${app.version}"/>
+
+        <property name="appversion.package.path"
+                  value="org/word/editor/core/util"/>
+
+        <property name="appversion.template.dir"
+                  value="${basedir}/build-templates"/>
+        <property name="appversion.src.dir"
+                  value="${basedir}/src"/>
+
+        <property name="appversion.template.file"
+                  value="${appversion.template.dir}/${appversion.package.path}/AppVersion.java.template"/>
+        <property name="appversion.generated.file"
+                  value="${appversion.src.dir}/${appversion.package.path}/AppVersion.java"/>
+
+        <mkdir dir="${appversion.src.dir}/${appversion.package.path}"/>
+
+        <copy file="${appversion.template.file}"
+              tofile="${appversion.generated.file}"
+              overwrite="true"
+              filtering="true">
+            <filterset>
+                <filter token="app.version" value="${app.version}"/>
+            </filterset>
+        </copy>
+    </target>
+
+</project>

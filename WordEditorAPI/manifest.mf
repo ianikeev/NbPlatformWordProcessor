@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+AutoUpdate-Show-In-Client: true
+OpenIDE-Module: org.word.editor.api
+OpenIDE-Module-Localizing-Bundle: org/word/editor/api/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+
