@@ -12,7 +12,7 @@
     </target>
 
     <target name="-pre-compile" depends="-init-user">
-        <echo message="Generating AppVersion.java with version: ${app.version}"/>
+        <echo level="warning" message="Generating AppVersion.java with version: ${app.version}"/>
 
         <property name="appversion.package.path"
                   value="org/word/editor/core/util"/>

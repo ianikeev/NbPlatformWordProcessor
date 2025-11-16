@@ -15,7 +15,7 @@ Write-Host ""
 
 # Step 1: Build the NetBeans application
 Write-Host "[1/2] Building application..." -ForegroundColor Cyan
-& ant "-Dapp.version=$version" clean create-platform
+& ant -quiet "-Dapp.version=$version" clean create-platform
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "ERROR: Build failed with exit code $LASTEXITCODE" -ForegroundColor Red

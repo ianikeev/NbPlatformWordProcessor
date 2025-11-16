@@ -12,7 +12,7 @@ public final class AppVersion {
     /**
      * The build version string (e.g., "yyyy.MM.dd.HHmm" or "DEV-BUILD").
      */
-    private static final String VERSION = "2025.11.15.1955"; // <-- Ant replaces this token
+    private static final String VERSION = "2025.11.16.1726"; // <-- Ant replaces this token
 
     /**
      * Gets the application's build version.
