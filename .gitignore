@@ -27,8 +27,10 @@ nbdist/
 .nb-gradle/
 
 Output/
+*.obj
+*.exe
 
 # Generated AppVersion file
 # *** Adjust path to match your package ***
-/src/org/word/editor/core/utils/AppVersion.java
+/WordEditorCore/src/org/word/editor/core/utils/AppVersion.java
 

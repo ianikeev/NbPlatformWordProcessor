@@ -1,0 +1,3 @@
+* Custom launcher to use with the bundled JRE
+
+Compile it with `cl launcher.c /Fe:launcher.exe user32.lib`
