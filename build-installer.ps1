@@ -25,10 +25,52 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host "Build successful!" -ForegroundColor Green
 
+# Alternative: Create minimal JRE with required modules
+Write-Host "[1.5/2] Creating custom JRE with required modules..." -ForegroundColor Cyan
+
+if (Test-Path $env:JAVA_HOME) {
+    $jlinkPath = "$env:JAVA_HOME\bin\jlink.exe"
+    
+    if (Test-Path $jlinkPath) {
+        $jreDest = ".\dist\wordprocessor\jre"
+        
+        if (Test-Path $jreDest) {
+            Remove-Item $jreDest -Recurse -Force
+        }
+        
+        # Modules required by NetBeans platform
+        $modules = @(
+            "java.base",
+            "java.desktop",
+            "java.instrument",  # Critical - includes IllegalClassFormatException
+            "java.logging",
+            "java.management",
+            "java.naming",
+            "java.prefs",
+            "java.sql",
+            "java.xml",
+            "jdk.unsupported",
+            "jdk.jsobject",
+            "jdk.management"
+        ) -join ","
+        
+        & $jlinkPath --add-modules $modules --output $jreDest --strip-debug --no-man-pages --no-header-files
+        
+        if (Test-Path "$jreDest\bin\java.exe") {
+            Write-Host "Custom JRE created successfully with required modules!" -ForegroundColor Green
+        } else {
+            Write-Host "WARNING: Custom JRE creation may have failed" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "WARNING: jlink.exe not found. Using full JDK copy." -ForegroundColor Yellow
+        # Fall back to full JDK copy
+    }
+}
+
 # Step 2: Create installer using NSIS
 Write-Host "[2/2] Creating NSIS installer..." -ForegroundColor Cyan
 if (-not (Test-Path "installer.nsis")) {
-    Write-Host "ERROR: installer.nsi not found!" -ForegroundColor Red
+    Write-Host "ERROR: installer.nsis not found!" -ForegroundColor Red
     Write-Host "Looking in: $PSScriptRoot" -ForegroundColor Red
     pause
     exit 1
@@ -50,7 +92,7 @@ $nsisArgs = @(
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "ERROR: NSIS installer compilation failed!" -ForegroundColor Red
-    Write-Host "Make sure NSIS is installed at 'C:\Program Files (x86)\NSIS\'" -ForegroundColor Red
+    Write-Host "Make sure NSIS is installed and is in PATH." -ForegroundColor Red
     pause
     exit 1
 }

@@ -13,7 +13,7 @@ ManifestDPIAware true
 !define PUBLISHER_URL "https://www.example.com"
 !define SUPPORT_URL "https://support.example.com"
 !define UPDATES_URL "https://updates.example.com"
-!define COPYRIGHT "Copyright (C) 2024 Example."
+!define COPYRIGHT "Copyright (C) 2025 Example."
 
 ; Installer attributes
 Name "${APP_NAME}"
@@ -126,7 +126,8 @@ done:
 FunctionEnd
 
 Function LaunchApp
-  Exec '"$INSTDIR\bin\$AppExecutable"'
+  ; Use the custom launcher instead of direct executable
+  Exec '"$INSTDIR\bin\launcher.exe"'
 FunctionEnd
 
 ; Main application section (required)
@@ -135,8 +136,12 @@ Section "!${APP_NAME}" SecMain
   
   SetOutPath "$INSTDIR"
   
-  ; Copy application files (both 32-bit and 64-bit launchers)
+  ; Copy application files
   File /r ".\dist\wordprocessor\*"
+  
+  ; Copy the custom launcher to the bin directory where the main executable is
+  SetOutPath "$INSTDIR\bin"
+  File ".\launcher.exe"
   
   ; Store installation folder
   WriteRegStr HKLM "SOFTWARE\${PUBLISHER}\MyWordProcessor" "InstallDir" "$INSTDIR"
@@ -153,8 +158,9 @@ Section "!${APP_NAME}" SecMain
                    "DisplayName" "${APP_NAME}"
   WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${APP_GUID}" \
                    "UninstallString" '"$INSTDIR\uninstall.exe"'
+  ; Point to the launcher instead of the direct executable
   WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${APP_GUID}" \
-                   "DisplayIcon" "$INSTDIR\bin\$AppExecutable"
+                   "DisplayIcon" "$INSTDIR\bin\launcher.exe"
   WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${APP_GUID}" \
                    "Publisher" "${PUBLISHER}"
   WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${APP_GUID}" \
@@ -172,18 +178,16 @@ Section "!${APP_NAME}" SecMain
 
 SectionEnd
 
-; Start Menu shortcuts section
+; Start Menu shortcuts section - update to use launcher in bin directory
 Section "Start Menu Shortcuts" SecStartMenu
-  SectionIn 1 2 3
-  ; Create start menu shortcuts
   CreateDirectory "$SMPROGRAMS\$StartMenuFolder"
-  CreateShortcut "$SMPROGRAMS\$StartMenuFolder\My WordProcessor.lnk" "$INSTDIR\bin\$AppExecutable"
+  CreateShortcut "$SMPROGRAMS\$StartMenuFolder\My WordProcessor.lnk" "$INSTDIR\bin\launcher.exe"
   CreateShortcut "$SMPROGRAMS\$StartMenuFolder\Uninstall My WordProcessor.lnk" "$INSTDIR\uninstall.exe"
 SectionEnd
 
-; Desktop shortcut section
+; Desktop shortcut section - update to use launcher in bin directory
 Section /o "Desktop Shortcut" SecDesktop
-  CreateShortcut "$DESKTOP\My WordProcessor.lnk" "$INSTDIR\bin\$AppExecutable"
+  CreateShortcut "$DESKTOP\My Word Processor.lnk" "$INSTDIR\bin\launcher.exe"
 SectionEnd
 
 ; Section descriptions
@@ -207,6 +211,5 @@ Section "Uninstall"
   RMDir "$SMPROGRAMS\$StartMenuFolder"
   
   ; Remove desktop shortcut
-  Delete "$DESKTOP\My WordProcessor.lnk"
-
+  Delete "$DESKTOP\My Word Processor.lnk"
 SectionEnd

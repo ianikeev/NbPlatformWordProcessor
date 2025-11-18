@@ -1,95 +1,89 @@
 #include <windows.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <string.h> // Required for strrchr
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
+                   LPSTR lpCmdLine, int nCmdShow) {
+
+    // --- START: Added Code ---
+    // Try to attach to the parent process's console.
+    // This will return TRUE if launched from cmd.exe
+    // This will return FALSE if double-clicked (no parent console), which is fine.
+    BOOL attachedToConsole = AttachConsole(ATTACH_PARENT_PROCESS);
+    // --- END: Added Code ---
+
     char appDir[MAX_PATH];
-    char javaExe[MAX_PATH];
     char appExe[MAX_PATH];
+    char jrePath[MAX_PATH];
     char commandLine[2048];
-    
+
     // Get the directory where the launcher is located
     GetModuleFileName(NULL, appDir, MAX_PATH);
-    
+
     // Extract directory path
     char* lastBackslash = strrchr(appDir, '\\');
     if (lastBackslash) {
         *lastBackslash = '\0';
     }
-    
+
     // Construct paths
-    snprintf(javaExe, sizeof(javaExe), "%s\\..\\jre\\bin\\javaw.exe", appDir);
-    snprintf(appExe, sizeof(appExe), "%s\\wordprocessor64.exe", appDir);
-    
-    // Check if the main application executable exists
-    if (GetFileAttributes(appExe) == INVALID_FILE_ATTRIBUTES) {
-        MessageBox(NULL, 
-            "Main application executable not found.\n\n"
-            "File not found:\n" 
-            "wordprocessor64.exe\n\n"
-            "The installation may be corrupted.", 
-            "Application Error", 
-            MB_ICONERROR | MB_OK);
-        return 1;
-    }
-    
+    sprintf(appExe, "%s\\wordprocessor64.exe", appDir);
+    sprintf(jrePath, "%s\\..\\jre", appDir);
+
     // Check if bundled JRE exists
-    if (GetFileAttributes(javaExe) != INVALID_FILE_ATTRIBUTES) {
-        // Use bundled JRE
-        snprintf(commandLine, sizeof(commandLine), "\"%s\" -jar \"%s\"", javaExe, appExe);
+    DWORD attrib = GetFileAttributes(jrePath);
+    if (attrib != INVALID_FILE_ATTRIBUTES && (attrib & FILE_ATTRIBUTE_DIRECTORY)) {
+        sprintf(commandLine, "\"%s\" --jdkhome \"%s\"", appExe, jrePath);
     } else {
-        // Use system Java
-        snprintf(commandLine, sizeof(commandLine), "javaw.exe -jar \"%s\"", appExe);
+        sprintf(commandLine, "\"%s\"", appExe);
     }
-    
-    // Prepare startup info
+
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
-    
+
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
     ZeroMemory(&pi, sizeof(pi));
+
+    // NOTE: We no longer use STARTF_USESTDHANDLES.
+    // If AttachConsole succeeded, our launcher now has *real* standard
+    // handles, which will be inherited by the child because
+    // bInheritHandles is TRUE.
     
-    // Start the application
-    BOOL success = CreateProcess(
-        NULL,           // No module name (use command line)
-        commandLine,    // Command line
-        NULL,           // Process handle not inheritable
-        NULL,           // Thread handle not inheritable
-        FALSE,          // Set handle inheritance to FALSE
-        0,              // No creation flags
-        NULL,           // Use parent's environment block
-        NULL,           // Use parent's starting directory
-        &si,            // Pointer to STARTUPINFO structure
-        &pi             // Pointer to PROCESS_INFORMATION structure
-    );
-    
-    if (!success) {
-        DWORD error = GetLastError();
-        char errorMsg[512];
-        
-        if (error == ERROR_FILE_NOT_FOUND) {
-            snprintf(errorMsg, sizeof(errorMsg),
-                "Java Runtime Environment not found.\n\n"
-                "This application requires Java to run.\n\n"
-                "Please install Java from:\n"
-                "https://www.java.com/download\n\n"
-                "Error code: %lu", error);
-        } else {
-            snprintf(errorMsg, sizeof(errorMsg),
-                "Failed to start application.\n\n"
-                "Command: %s\n\n"
-                "Error code: %lu", commandLine, error);
+    // Launch the process
+    if (!CreateProcess(NULL,
+                       commandLine,
+                       NULL,
+                       NULL,
+                       TRUE,        // CRITICAL: Must be TRUE to pass on the attached console
+                       0,           // No creation flags
+                       NULL,
+                       NULL,
+                       &si,
+                       &pi))
+    {
+        MessageBox(NULL, "Failed to launch application.", "Launcher Error", MB_OK | MB_ICONERROR);
+        // --- START: Added Code ---
+        if (attachedToConsole) {
+            FreeConsole(); // Detach on error
         }
-        
-        MessageBox(NULL, errorMsg, "Application Error", MB_ICONERROR | MB_OK);
+        // --- END: Added Code ---
         return 1;
     }
-    
-    // Close process and thread handles
-    CloseHandle(pi.hProcess);
-    CloseHandle(pi.hThread);
-    
+
+    // Wait for the application to exit
+    if (pi.hProcess) {
+        WaitForSingleObject(pi.hProcess, INFINITE);
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+    }
+
+    // --- START: Added Code ---
+    // If we attached to a console, detach from it before we exit.
+    if (attachedToConsole) {
+        FreeConsole();
+    }
+    // --- END: Added Code ---
+
     return 0;
 }

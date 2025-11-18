@@ -1,3 +1,14 @@
-* Custom launcher to use with the bundled JRE
+* Custom Launcher to Use With the Bundled JRE
 
-Compile it with `cl launcher.c /Fe:launcher.exe user32.lib`
+Compile it with `cl launcher.c /link /SUBSYSTEM:WINDOWS kernel32.lib user32.lib`.
+
+This launcher is specifically made for Windows and is compiled with Microsoft's
+Visual C++ compiler. It checks if it's run from the console. If it is so, it
+attaches itself to it and redirects stdin, stdout, and stderr, if not, it runs
+as a proper GUI program.
+
+* Single Source of Truth for the Version Number
+
+The Powershell script obtains the date and time based version number from the
+system and then passes it to Ant during the build stage and to the installer
+generator.
