@@ -32,5 +32,5 @@ Output/
 
 # Generated AppVersion file
 # *** Adjust path to match your package ***
-WordEditorCore/src/org/word/editor/core/utils/AppVersion.java
+WordEditorCore/src/org/word/editor/core/util/AppVersion.java
 
